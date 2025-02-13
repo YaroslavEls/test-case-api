@@ -15,7 +15,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'min:2', 'max:60'],
             'email' => ['required', 'email:rfc', 'unique:users,email'],
             'phone' => ['required', new UkrainianPhoneNumber, 'unique:users,phone'],
-            'position_id' => ['required', 'exists:positions,id'],
+            'position_id' => ['required', 'integer', 'exists:positions,id'],
             'photo' => ['required', 'image', 'mimes:jpeg,jpg', 'max:5120'],
         ];
     }
