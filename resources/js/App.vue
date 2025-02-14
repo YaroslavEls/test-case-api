@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 
+const positions = ref();
 const getResponse = ref();
 const postResponse = ref();
 
@@ -13,6 +14,8 @@ const initForm = () => ({
     position_id: null,
     photo: null
 });
+
+const selectedPos = ref();
 
 let form = initForm();
 
@@ -28,9 +31,32 @@ const getUsers = async (url) => {
     }
 };
 
+const getPositions = async () => {
+    try {
+        const response = await axios.get('/api/v1/positions');
+        positions.value = response.data.positions;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+const getToken = async () => {
+    try {
+        const response = await axios.get('/api/v1/token');
+        return response.data.token;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
 const postUser = async () => {
+    const position = positions.value.find(pos => pos.name === selectedPos.value);
+    if (position) {
+        form.position_id = position.id;
+    }
+    
     const headers = {
-        'Token': form.token,
+        'Token': await getToken(),
         'Content-Type': 'multipart/form-data'
     };
 
@@ -38,6 +64,7 @@ const postUser = async () => {
         postResponse.value = await axios.post('/api/v1/users', form, { headers });
         form = initForm();
         document.getElementById('photoInput').value = null;
+        selectedPos.value = null;
     } catch (error) {
         postResponse.value = error.response;
     }
@@ -45,6 +72,7 @@ const postUser = async () => {
 
 onMounted(async () => {
     await getUsers('/api/v1/users?count=6');
+    await getPositions();
 });
 
 </script>
@@ -60,7 +88,7 @@ onMounted(async () => {
         </div>
         
         <div class="flex flex-wrap justify-between gap-y-4">
-            <div v-for="user in getResponse.data.users" :key="user.id" class="border p-4 rounded shadow-md flex w-full w-[49%] gap-4">
+            <div v-for="user in getResponse.data.users" :key="user.id" class="border p-4 rounded shadow-md flex w-[49%] gap-4">
                 <img :src="user.photo" alt="User Photo" class="w-[70px] h-[70px] object-cover rounded-full" />
                 <div>
                     <p><span class="font-bold">ID</span>: {{ user.id }}</p>
@@ -78,10 +106,6 @@ onMounted(async () => {
         <h2 class="text-xl font-bold mb-4">Create User 🐣</h2>
         <form @submit.prevent="postUser">
             <div class="mb-2">
-                <label class="block">Token:</label>
-                <input v-model="form.token" class="border p-2 w-full" />
-            </div>
-            <div class="mb-2">
                 <label class="block">Name:</label>
                 <input v-model="form.name" class="border p-2 w-full" />
             </div>
@@ -94,8 +118,10 @@ onMounted(async () => {
                 <input v-model="form.phone" class="border p-2 w-full" />
             </div>
             <div class="mb-4">
-                <label class="block">Position ID:</label>
-                <input v-model="form.position_id" class="border p-2 w-full" />
+                <label class="block">Position:</label>
+                <select v-if="positions" v-model="selectedPos" class="p-2 w-full">
+                    <option v-for="pos in positions" :value="pos.name">{{ pos.name }}</option>
+                </select>
             </div>
             <div class="mb-4">
                 <label class="block">Photo:</label>

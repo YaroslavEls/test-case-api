@@ -9,7 +9,6 @@ use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\SuccessResponse;
 use App\Models\User;
-use App\Services\UserCreationTokenService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
@@ -18,10 +17,6 @@ use function Tinify\fromBuffer;
 
 class UserController extends Controller
 {
-    public function __construct(
-        private UserCreationTokenService $tokenService
-    ) {}
-
     public function index(IndexUserRequest $request): SuccessResponse
     {
         $request->validated();
@@ -36,13 +31,6 @@ class UserController extends Controller
     {
         $validated = $request->validated();
 
-        $token = $request->header('Token');
-
-        if (!$token || !$this->tokenService->validate($token)) {
-            $message = 'The token is invalid or has expired';
-            throw new ResponseException(401, $message);
-        }
-        
         $photo = $request->file('photo');
         $path = 'storage/uploads/';
         $filename = time() . '_' . Str::random(10) . '.' . $photo->extension();

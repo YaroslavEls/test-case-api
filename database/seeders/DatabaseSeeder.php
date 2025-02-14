@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Position;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,7 +14,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Position::factory(20)->create();
+        $positions = ['Lawyer', 'Content manager', 'Security', 'Designer'];
+
+        Position::factory()
+            ->count(count($positions))
+            ->sequence(fn (Sequence $sequence) => ['name' => $positions[$sequence->index]])
+            ->create();
+
         User::factory(45)->create();
     }
 }
